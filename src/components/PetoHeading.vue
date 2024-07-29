@@ -169,7 +169,7 @@ onMounted( () => {
 
     display: inline-block;
     margin: 0;
-    color: #8db8cc;
+    color: var(--colour-blue);
 
 }
 
