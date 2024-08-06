@@ -1,6 +1,9 @@
 <template>
     <div class="heading-container" ref="heading" :class="headingClasses">
         <slot></slot>
+        <button class="repeat-button" v-if="props.devMode" @mousedown="gsapTween.restart()">
+            <peto-icon name="replay" :colour="'rgb(224, 100, 42)'"></peto-icon>
+        </button>
     </div>
 </template>
 
@@ -8,28 +11,35 @@
 
 import { ref, onMounted } from 'vue';
 import gsap from 'gsap';
+import PetoIcon from './PetoIcon.vue';
 
 /* PROPS */
 
 const props = defineProps({
-    animation: {
+    animation: {                // Determines the animation to be applied to the heading.
         type: String,
         default: 'fade-in'
     },
-    split: {
+    split: {                    // Determines whether the heading should be split into individual letters.
         type: Boolean,
         default: false
     },
-    hiddenOverflow: {
+    hiddenOverflow: {           // Determines whether the heading should have hidden overflow.
         type: Boolean,
+        default: false
+    },
+    devMode: {
+        type: Boolean,          // Determines whether the component is in development mode, enabling tools like the repeat button.
         default: false
     }
 });
 
 /* DATA INITIALISATION */
 
-const heading = ref(null);
-const headingClasses = {
+const heading = ref(null);                      // Reference to the heading element.
+let headingInnerElement = null;                 // Reference to the inner element of the heading (the slotted content).
+
+const headingClasses = {                        // Object to store the classes to be applied to the heading.
     'hidden-overflow': props.hiddenOverflow
 };
 
@@ -62,104 +72,102 @@ const gsapTransform = {
     }
 }
 
-const gsapFrom = {};    // Object to store the initial values of the heading.
-const gsapTo = {};      // Object to store the final values of the heading.
+const gsapFrom = {};        // Object to store the initial values of the heading.
+const gsapTo = {};          // Object to store the final values of the heading.
+
+let gsapTween = null;       // Reference to the GSAP tween.
+
+/* LIFECYCLE HOOKS */
 
 onMounted( () => {
 
-    let headingContent = heading.value.children[0];
+    headingInnerElement = heading.value.children[0];                        // When mounted, get the element from the slot.
 
-    /** 
-     * SWITCH STATEMENT
-     * Switch statement that determines the animation to be applied to the heading. The available animations are:
-     * >> fade-in: Fades in the heading.
-     * >> skew-in: Includes fade-in and adds a skew effect.
-     * >> skew-in-3d: Includes skew-in and adds a 3D rotation effect.
-     */
+    setAnimation();                                                         // Set the animation to be applied to the heading.
+
+    if(props.devMode) {                                                     // If the component is in dev mode, a reference will be stored to access the different twwen functions.
+        gsapTween = gsap.fromTo(headingInnerElement, gsapFrom, gsapTo);     
+    } else {                                                                // Otherwise, the tween will be just played.
+        gsap.fromTo(headingInnerElement, gsapFrom, gsapTo);                 
+    }
+
+});
+
+/* FUNCTIONS */
+
+/** 
+ * setAnimation()
+ * Function declaration that contains a SWITCH, which sets and determines the animation to be applied to the heading. The available animations are:
+ * >> fade-in: Fades in the heading.
+ * >> skew-in: Includes fade-in and adds a skew effect.
+ * >> skew-in-3d: Includes skew-in and adds a 3D rotation effect.
+ */
+function setAnimation() {
+
+    // Basic animation options present in all cases.
+    gsapFrom.opacity = gsapTransform.opacity.from;
+    gsapFrom.y = gsapTransform.y.from;
+
+    gsapTo.opacity = gsapTransform.opacity.to;
+    gsapTo.y = gsapTransform.y.to;
+    gsapTo.duration = gsapDuration;
+    gsapTo.delay = gsapDelay;
 
     switch(props.animation) {
 
-        case 'fade-in':
+        default:
+        case 'fade-in':                                         // Fade in animation.
 
-            if(props.split) {   // If true, split the heading into individual letters.
+            if(props.split) {   // If the heading needs to be split.
 
-                const headingText = headingContent.textContent;
-                const splitText = [...headingText];
-
-                const splitHeading = splitText.map( ( letter ) => {
-                    if(letter === ' ') {
-                        return `<span style="display: inline-block;">&nbsp;</span>`;
-                    } else {
-                        return `<span style="display: inline-block;">${ letter }</span>`;
-                    }
-                });
-
-                headingContent.innerHTML = splitHeading.join('');
-                headingContent = headingContent.querySelectorAll('span');
-
-                /* Animation setup */
-
-                gsapFrom.opacity = gsapTransform.opacity.from;
-                gsapFrom.y = gsapTransform.y.from;
-
-                gsapTo.opacity = gsapTransform.opacity.to;
-                gsapTo.y = gsapTransform.y.to;
-                gsapTo.duration = gsapDuration;
-                gsapTo.delay = gsapDelay;
+                splitHeading();
+                
                 gsapTo.stagger = gsapStagger;
-
-            } else {    // For everything else, animate the heading as a whole.
-
-                gsapFrom.opacity = gsapTransform.opacity.from;
-                gsapFrom.y = gsapTransform.y.from;
-
-                gsapTo.opacity = gsapTransform.opacity.to;
-                gsapTo.y = gsapTransform.y.to;
-                gsapTo.duration = gsapDuration;
-                gsapTo.delay = gsapDelay;
 
             }
 
             break;
 
-        case 'skew-in':
+        case 'skew-in':                                         // Skew in animation.
 
-            gsapFrom.opacity = gsapTransform.opacity.from;
-            gsapFrom.y = gsapTransform.y.from;
             gsapFrom.skewY = gsapTransform.skewY.from;
 
-            gsapTo.opacity = gsapTransform.opacity.to;
-            gsapTo.y = gsapTransform.y.to;
             gsapTo.skewY = gsapTransform.skewY.to;
-            gsapTo.duration = gsapDuration;
-            gsapTo.delay = gsapDelay;
 
             break;
 
-        case 'skew-in-3d':
+        case 'skew-in-3d':                                      // Skew in 3D animation.
 
-            gsapFrom.opacity = gsapTransform.opacity.from;
-            gsapFrom.y = gsapTransform.y.from;
             gsapFrom.skewY = gsapTransform.skewY.from;
             gsapFrom.rotateX = gsapTransform.rotateX.from;
 
-            gsapTo.opacity = gsapTransform.opacity.to;
-            gsapTo.y = gsapTransform.y.to;
             gsapTo.skewY = gsapTransform.skewY.to;
             gsapTo.rotateX = gsapTransform.rotateX.to;
-            gsapTo.duration = gsapDuration;
-            gsapTo.delay = gsapDelay;
 
             break;
 
-        default:
-            break;
+        }
+}
 
-    }
+/**
+ * splitHeading()
+ * Function declaration that splits the heading into individual letters, and wraps each letter in a span element. This is used to animate each letter individually.
+ */
+function splitHeading() {
+    const headingText = headingInnerElement.textContent;
+    const splitText = [...headingText];
 
-    gsap.fromTo(headingContent, gsapFrom, gsapTo);  // Apply the animation to the heading.
+    const splitHeading = splitText.map( ( letter ) => {
+        if(letter === ' ') {
+            return `<span style="display: inline-block;">&nbsp;</span>`;
+        } else {
+            return `<span style="display: inline-block;">${ letter }</span>`;
+        }
+    });
 
-});
+    headingInnerElement.innerHTML = splitHeading.join('');
+    headingInnerElement = headingInnerElement.querySelectorAll('span');
+} 
 
 </script>
 
@@ -193,6 +201,29 @@ onMounted( () => {
 
 .hidden-overflow {
     overflow: hidden;
+}
+
+.repeat-button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-left: 1rem;
+    border: 0.067rem solid rgb(224, 100, 42);
+    background: transparent;
+    border-radius: 50%;
+    transition: background 150ms;
+    cursor: pointer;
+
+    &:hover {   // Hover state.
+        background: rgb(224, 100, 42, 0.18);
+    }
+    
+    & > .peto-icon {
+        width: 1rem;
+        height: 1rem;
+    }
 }
 
 </style>

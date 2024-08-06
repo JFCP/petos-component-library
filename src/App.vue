@@ -1,11 +1,11 @@
 <template>
-    <NavigationBar />
     <div id="page-container">
         <h1>Peto's Component Library</h1>
         <div id="router-container">
             <RouterView />
         </div>
     </div>
+    <NavigationBar />
 </template>
 
 <script setup>

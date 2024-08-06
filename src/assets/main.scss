@@ -50,8 +50,8 @@ h1, h2, h3, h4, h5, h6, h1>span, h2>span, h3>span, h4>span, h5>span, h6>span {
 }
 
 h1 {
-    margin: 0 0 2rem 0;
-    font-size: 2rem;
+    margin: 0 0 3rem 0;
+    font-size: 2.5rem;
 }
 
 h2 {
@@ -60,10 +60,14 @@ h2 {
 }
 
 h3 {
-    margin: 0 0 1rem 0;
+    margin: 0rem 0 1rem 0;
     font-size: 1.25rem;
     font-weight: 500;
     color: var(--colour-grey);
+}
+
+a {
+    text-decoration: none;
 }
 
 /* App.vue Styling */
@@ -86,11 +90,16 @@ h3 {
         
         & > .sub-section {
             width: 100%;
+            margin-bottom: 3rem;
 
             &.examples {
                 padding: 2rem;
                 border: 0.067rem solid var(--colour-lightgrey-two);
                 border-radius: 1rem;
+
+                & > h3 {
+                    margin-top: 2rem;
+                }
             }
 
             & > *:last-child {
